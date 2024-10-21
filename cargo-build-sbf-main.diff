@@ -1,0 +1,44 @@
+diff --git a/sdk/cargo-build-sbf/src/main.rs b/sdk/cargo-build-sbf/src/main.rs
+index 0da59ff..b0960c5 100644
+--- a/sdk/cargo-build-sbf/src/main.rs
++++ b/sdk/cargo-build-sbf/src/main.rs
+@@ -242,6 +242,7 @@ fn install_if_missing(
+     download_file_name: &str,
+     target_path: &Path,
+ ) -> Result<(), String> {
++    return Ok(());
+     if config.force_tools_install {
+         if target_path.is_dir() {
+             debug!("Remove directory {:?}", target_path);
+@@ -652,16 +653,6 @@ fn build_solana_package(
+     env::set_var("OBJDUMP", llvm_bin.join("llvm-objdump"));
+     env::set_var("OBJCOPY", llvm_bin.join("llvm-objcopy"));
+ 
+-    // RUSTC variable overrides cargo +<toolchain> mechanism of
+-    // selecting the rust compiler and makes cargo run a rust compiler
+-    // other than the one linked in Solana toolchain. We have to prevent
+-    // this by removing RUSTC from the child process environment.
+-    if env::var("RUSTC").is_ok() {
+-        warn!(
+-            "Removed RUSTC from cargo environment, because it overrides +solana cargo command line option."
+-        );
+-        env::remove_var("RUSTC")
+-    }
+     let cargo_target = "CARGO_TARGET_SBF_SOLANA_SOLANA_RUSTFLAGS";
+     let rustflags = env::var("RUSTFLAGS").ok().unwrap_or_default();
+     if env::var("RUSTFLAGS").is_ok() {
+@@ -696,13 +687,7 @@ fn build_solana_package(
+     }
+ 
+     let cargo_build = PathBuf::from("cargo");
+-    let mut cargo_build_args = vec![
+-        "+solana",
+-        "build",
+-        "--release",
+-        "--target",
+-        "sbf-solana-solana",
+-    ];
++    let mut cargo_build_args = vec!["build", "--release", "--target", "sbf-solana-solana"];
+     if config.arch == "sbfv2" {
+         cargo_build_args.push("-Zbuild-std=std,panic_abort");
+     }

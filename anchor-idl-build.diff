@@ -1,0 +1,16 @@
+diff --git a/idl/src/build.rs b/idl/src/build.rs
+index 96dc3db..a93fa19 100644
+--- a/idl/src/build.rs
++++ b/idl/src/build.rs
+@@ -65,11 +65,8 @@ fn build(program_path: &Path, resolution: bool, skip_lint: bool, no_docs: bool)
+         .map(|toolchain| format!("+{}", toolchain))
+         .unwrap_or_else(|_| "+nightly".to_string());
+ 
+-    install_toolchain_if_needed(&toolchain)?;
+-
+     let output = Command::new("cargo")
+         .args([
+-            &toolchain,
+             "test",
+             "__anchor_private_print_idl",
+             "--features",
