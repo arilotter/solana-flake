@@ -26,6 +26,14 @@
       solana-cli = solana-pkgs.solana-cli;
       solana-rust = solana-pkgs.solana-rust;
       anchor = solana-pkgs.anchor;
+      default = pkgs.symlinkJoin {
+        name = "solana-all";
+        paths = [
+          solana-pkgs.solana-cli
+          solana-pkgs.solana-rust
+          solana-pkgs.anchor
+        ];
+      };
     });
   };
 }
