@@ -23,13 +23,13 @@
         inherit pkgs python;
       };
     in {
-      solana-cli = solana-pkgs.solana-cli;
+      solana = solana-pkgs.solana;
       solana-rust = solana-pkgs.solana-rust;
       anchor = solana-pkgs.anchor;
       default = pkgs.symlinkJoin {
         name = "solana-all";
         paths = [
-          solana-pkgs.solana-cli
+          solana-pkgs.solana
           solana-pkgs.solana-rust
           solana-pkgs.anchor
         ];

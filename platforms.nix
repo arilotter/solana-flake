@@ -1,12 +1,12 @@
 pkgs: let
-  sol-version = "1.18.23";
+  sol-version = "2.0.22";
 in {
   platform-tools = rec {
     version = "v1.43";
     make = sys: hash:
       pkgs.fetchzip {
         url =
-          "https://github.com/solana-labs/platform-tools/releases/download/"
+          "https://github.com/anya-xyz/platform-tools/releases/download/"
           + "${version}/platform-tools-${sys}.tar.bz2";
         sha256 = hash;
         stripRoot = false;
@@ -24,7 +24,7 @@ in {
     make = sys: hash:
       fetchTarball {
         url =
-          "https://github.com/solana-labs/solana/releases/download/"
+          "https://github.com/anza-xyz/agave/releases/download/"
           + "v${sol-version}/solana-release-${sys}.tar.bz2";
         sha256 = hash;
       };

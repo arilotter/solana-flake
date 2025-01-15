@@ -92,8 +92,8 @@ with pkgs; rec {
       cp -ar ${solana-source}/sdk/sbf/* $out/bin/sdk/sbf/
     '';
   };
-  solana-cli = stdenv.mkDerivation {
-    name = "solana-cli";
+  solana = stdenv.mkDerivation {
+    name = "solana";
     version = platforms.cli.version;
     src = platforms.cli.${system};
     nativeBuildInputs = [autoPatchelfHook makeWrapper];
