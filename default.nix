@@ -1,16 +1,15 @@
 {
   pkgs,
-  python,
 }:
 with pkgs; rec {
   platforms = import ./platforms.nix pkgs;
 
-  solana-source = pkgs.fetchFromGitHub {
-    owner = "solana-labs";
-    repo = "solana";
+  agave-src = pkgs.fetchFromGitHub {
+    owner = "anza-xyz";
+    repo = "agave";
     rev = "v${platforms.sol-version}";
     fetchSubmodules = true;
-    sha256 = "sha256-ha+0P/XTI05LUd8CCzKMxrRkLThRN6jj6fn3d03HFyk=";
+    sha256 = "sha256-3wvXHY527LOvQ8b4UfXoIKSgwDq7Sm/c2qqj2unlN6I=";
   };
 
   solana-cargo-build-sbf = with pkgs;
@@ -18,15 +17,14 @@ with pkgs; rec {
       pname = "solana-cargo-build-sbf";
       version = platforms.sol-version;
 
-      src = solana-source;
+      src = agave-src;
       buildAndTestSubdir = "sdk/cargo-build-sbf";
 
       cargoLock = {
-        lockFile = "${solana-source}/Cargo.lock";
+        lockFile = "${agave-src}/Cargo.lock";
         outputHashes = {
           "crossbeam-epoch-0.9.5" = "sha256-Jf0RarsgJiXiZ+ddy0vp4jQ59J9m0k3sgXhWhCdhgws=";
-          "aes-gcm-siv-0.10.3" = "sha256-N1ppxvew4B50JQWsC3xzP0X4jgyXZ5aOQ0oJMmArjW8=";
-          "curve25519-dalek-3.2.1" = "sha256-FuVNFuGCyHXqKqg+sn3hocZf1KMCI092Ohk7cvLPNjQ=";
+          "curve25519-dalek-3.2.1" = "sha256-4MF/qaP+EhfYoRETqnwtaCKC1tnUJlBCxeOPCnKrTwQ=";
           "tokio-1.29.1" = "sha256-Z/kewMCqkPVTXdoBcSaFKG5GSQAdkdpj3mAzLLCjjGk=";
         };
       };
@@ -37,12 +35,14 @@ with pkgs; rec {
         cmake
         clang
         libclang.lib
+        protobuf
       ];
 
       buildInputs = [
         udev
         clang
         libclang.lib
+        libedit
       ];
 
       LIBCLANG_PATH = "${libclang.lib}/lib";
@@ -68,9 +68,18 @@ with pkgs; rec {
         openssl
         libclang.lib
         xz
-        python."3.8"
+        python310
+        libedit
       ]
       ++ lib.optionals stdenv.isLinux [udev];
+
+    preFixup = ''
+      for file in $(find $out -type f -executable); do
+        if patchelf --print-needed "$file" 2>/dev/null | grep -q "libedit.so.2"; then
+          patchelf --replace-needed libedit.so.2 libedit.so.0.0.74 "$file"
+        fi
+      done
+    '';
 
     installPhase = ''
       platformtools=$out/bin/sdk/sbf/dependencies/platform-tools
@@ -89,7 +98,7 @@ with pkgs; rec {
       ln -s ${criterion}/share $criterion/share
       touch $criterion-v${criterion.version}.md
 
-      cp -ar ${solana-source}/sdk/sbf/* $out/bin/sdk/sbf/
+      cp -ar ${agave-src}/sdk/sbf/* $out/bin/sdk/sbf/
     '';
   };
   solana = stdenv.mkDerivation {
@@ -119,6 +128,7 @@ with pkgs; rec {
       # Wrap cargo-build-sbf binary
       mv $out/bin/cargo-build-sbf $out/bin/.cargo-build-sbf-unwrapped
       makeWrapper $out/bin/.cargo-build-sbf-unwrapped $out/bin/cargo-build-sbf \
+        --set SBF_SDK_PATH "${solana-platform-tools}/bin/sdk/sbf" \
         --set RUSTC "${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools/rust/bin/rustc"
     '';
   };
@@ -152,32 +162,17 @@ with pkgs; rec {
 
   anchor = rustPlatform.buildRustPackage rec {
     pname = "anchor";
-    version = "0.30.1";
+    version = "pre";
 
     src = fetchFromGitHub {
       owner = "coral-xyz";
       repo = "anchor";
-      rev = "v${version}";
-      hash = "sha256-NL8ySfvnCGKu1PTU4PJKTQt+Vsbcj+F1YYDzu0mSUoY=";
+      rev = "a7a23eea308440a9fa9cb79cee7bddd30ab163d5";
+      hash = "sha256-xqKZxxKOjw1QFVfA9pNTvbcbP+ZWF0BpDCBlN6RjBNg=";
       fetchSubmodules = true;
     };
 
-    cargoLock = {
-      lockFileContents = builtins.readFile ./AnchorCargo.lock;
-      outputHashes = {
-        "serum_dex-0.4.0" = "sha256-Nzhh3OcAFE2LcbUgrA4zE2TnUMfV0dD4iH6fTi48GcI=";
-      };
-    };
-
-    postPatch = ''
-      rm Cargo.lock
-      ln -s ${./AnchorCargo.lock} Cargo.lock
-    '';
-
-    buildInputs = lib.optionals stdenv.isDarwin [
-      darwin.apple_sdk.frameworks.Security
-      darwin.apple_sdk.frameworks.SystemConfiguration
-    ];
+    cargoHash = "sha256-x/xIs7hEGKOsnF3xf4Pac0QFbhQ5+/fD1/DXhfaVrSA=";
 
     nativeBuildInputs = [makeWrapper];
 
