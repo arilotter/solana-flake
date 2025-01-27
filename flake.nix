@@ -1,14 +1,9 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    # only temporarily needed - platform tools will do a release in a few months
-    # that removes the requirement for python 3.8.
-    # see https://github.com/anza-xyz/platform-tools/issues/79
-    nixpkgs-python.url = "github:cachix/nixpkgs-python";
   };
   outputs = {
     nixpkgs,
-    nixpkgs-python,
     ...
   }: let
     forAllSystems = function:
@@ -16,11 +11,11 @@
         "x86_64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
-      ] (system: function nixpkgs.legacyPackages.${system} nixpkgs-python.packages.${system});
+      ] (system: function nixpkgs.legacyPackages.${system});
   in {
-    packages = forAllSystems (pkgs: python: let
+    packages = forAllSystems (pkgs: let
       solana-pkgs = pkgs.callPackage ./default.nix {
-        inherit pkgs python;
+        inherit pkgs;
       };
     in {
       solana = solana-pkgs.solana;

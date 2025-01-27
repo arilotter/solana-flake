@@ -6,15 +6,15 @@ in {
     make = sys: hash:
       pkgs.fetchzip {
         url =
-          "https://github.com/anya-xyz/platform-tools/releases/download/"
+          "https://github.com/anza-xyz/platform-tools/releases/download/"
           + "${version}/platform-tools-${sys}.tar.bz2";
         sha256 = hash;
         stripRoot = false;
       };
     x86_64-linux =
-      make "linux-x86_64" "sha256-e2qwEHNxjtqxjtBhgaKA0WkAF4LfKMHeYC0PUz/00Ts=";
+      make "linux-x86_64" "sha256-GhMnfjKNJXpVqT1CZE0Zyp4+NXJG41sUxwHye9DGPt0=";
     aarch64-darwin =
-      make "osx-aarch64" "sha256-nijBgC8R0lxVsuPZI8m6JgT7rh4QcJWPG28V+RI3QUk=";
+      make "osx-aarch64" "";
     x86_64-darwin =
       make "osx-x86_64" "";
   };

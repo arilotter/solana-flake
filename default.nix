@@ -1,16 +1,15 @@
 {
   pkgs,
-  python,
 }:
 with pkgs; rec {
   platforms = import ./platforms.nix pkgs;
 
   solana-source = pkgs.fetchFromGitHub {
-    owner = "solana-labs";
-    repo = "solana";
+    owner = "anza-xyz";
+    repo = "agave";
     rev = "v${platforms.sol-version}";
     fetchSubmodules = true;
-    sha256 = "sha256-ha+0P/XTI05LUd8CCzKMxrRkLThRN6jj6fn3d03HFyk=";
+    sha256 = "sha256-3wvXHY527LOvQ8b4UfXoIKSgwDq7Sm/c2qqj2unlN6I=";
   };
 
   solana-cargo-build-sbf = with pkgs;
@@ -25,8 +24,7 @@ with pkgs; rec {
         lockFile = "${solana-source}/Cargo.lock";
         outputHashes = {
           "crossbeam-epoch-0.9.5" = "sha256-Jf0RarsgJiXiZ+ddy0vp4jQ59J9m0k3sgXhWhCdhgws=";
-          "aes-gcm-siv-0.10.3" = "sha256-N1ppxvew4B50JQWsC3xzP0X4jgyXZ5aOQ0oJMmArjW8=";
-          "curve25519-dalek-3.2.1" = "sha256-FuVNFuGCyHXqKqg+sn3hocZf1KMCI092Ohk7cvLPNjQ=";
+          "curve25519-dalek-3.2.1" = "sha256-4MF/qaP+EhfYoRETqnwtaCKC1tnUJlBCxeOPCnKrTwQ=";
           "tokio-1.29.1" = "sha256-Z/kewMCqkPVTXdoBcSaFKG5GSQAdkdpj3mAzLLCjjGk=";
         };
       };
@@ -37,12 +35,14 @@ with pkgs; rec {
         cmake
         clang
         libclang.lib
+        protobuf
       ];
 
       buildInputs = [
         udev
         clang
         libclang.lib
+        libedit
       ];
 
       LIBCLANG_PATH = "${libclang.lib}/lib";
@@ -68,9 +68,18 @@ with pkgs; rec {
         openssl
         libclang.lib
         xz
-        python."3.8"
+        python310
+        libedit
       ]
       ++ lib.optionals stdenv.isLinux [udev];
+
+    preFixup = ''
+      for file in $(find $out -type f -executable); do
+        if patchelf --print-needed "$file" 2>/dev/null | grep -q "libedit.so.2"; then
+          patchelf --replace-needed libedit.so.2 libedit.so.0.0.74 "$file"
+        fi
+      done
+    '';
 
     installPhase = ''
       platformtools=$out/bin/sdk/sbf/dependencies/platform-tools
