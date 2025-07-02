@@ -100,6 +100,7 @@ rec {
 
       cp -ar ${agave-src}/sdk/sbf/* $out/bin/sdk/sbf/
     '';
+    dontCheckBrokenSymlinks = true;
   };
   solana = stdenv.mkDerivation {
     name = "solana";
