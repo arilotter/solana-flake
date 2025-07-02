@@ -1,7 +1,8 @@
 {
   pkgs,
 }:
-with pkgs; rec {
+with pkgs;
+rec {
   platforms = import ./platforms.nix pkgs;
 
   agave-src = pkgs.fetchFromGitHub {
@@ -12,7 +13,8 @@ with pkgs; rec {
     sha256 = "sha256-3wvXHY527LOvQ8b4UfXoIKSgwDq7Sm/c2qqj2unlN6I=";
   };
 
-  solana-cargo-build-sbf = with pkgs;
+  solana-cargo-build-sbf =
+    with pkgs;
     rustPlatform.buildRustPackage {
       pname = "solana-cargo-build-sbf";
       version = platforms.sol-version;
@@ -59,19 +61,17 @@ with pkgs; rec {
     name = "solana-platform-tools";
     version = platforms.platform-tools.version;
     src = platforms.platform-tools.${system};
-    nativeBuildInputs = [autoPatchelfHook];
-    buildInputs =
-      [
-        # Auto patching
-        zlib
-        stdenv.cc.cc
-        openssl
-        libclang.lib
-        xz
-        python310
-        libedit
-      ]
-      ++ lib.optionals stdenv.isLinux [udev];
+    nativeBuildInputs = [ autoPatchelfHook ];
+    buildInputs = [
+      # Auto patching
+      zlib
+      stdenv.cc.cc
+      openssl
+      libclang.lib
+      xz
+      python310
+      libedit
+    ] ++ lib.optionals stdenv.isLinux [ udev ];
 
     preFixup = ''
       for file in $(find $out -type f -executable); do
@@ -105,7 +105,10 @@ with pkgs; rec {
     name = "solana";
     version = platforms.cli.version;
     src = platforms.cli.${system};
-    nativeBuildInputs = [autoPatchelfHook makeWrapper];
+    nativeBuildInputs = [
+      autoPatchelfHook
+      makeWrapper
+    ];
 
     buildInputs = with pkgs; [
       solana-platform-tools
@@ -137,7 +140,10 @@ with pkgs; rec {
     name = "solana-rust";
     version = platforms.cli.version;
     src = platforms.cli.${system};
-    nativeBuildInputs = [autoPatchelfHook makeWrapper];
+    nativeBuildInputs = [
+      autoPatchelfHook
+      makeWrapper
+    ];
 
     buildInputs = with pkgs; [
       solana-platform-tools
@@ -172,11 +178,11 @@ with pkgs; rec {
       fetchSubmodules = true;
     };
 
-    cargoHash = "sha256-x/xIs7hEGKOsnF3xf4Pac0QFbhQ5+/fD1/DXhfaVrSA=";
+    cargoHash = "sha256-popy49tMI0SFa0WA33+avB5JQ2jiIEmGRXtRkSjOtvs=";
 
-    nativeBuildInputs = [makeWrapper];
+    nativeBuildInputs = [ makeWrapper ];
 
-    cargoPatches = [./anchor-idl-build.diff];
+    cargoPatches = [ ./anchor-idl-build.diff ];
 
     checkFlags = [
       "--skip=tests::test_check_and_get_full_commit_when_full_commit"
