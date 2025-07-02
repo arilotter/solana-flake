@@ -135,7 +135,6 @@ rec {
       mkdir -p $out/bin/sdk/sbf/dependencies
       cp -r $src/* $out
       ln -s ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools $out/bin/sdk/sbf/dependencies/platform-tools
-      ln -s $out/bin/ld.lld $out/bin/ld
       cp -rf ${solana-cargo-build-sbf}/* $out
       chmod 0755 -R $out
 
@@ -169,7 +168,7 @@ rec {
     installPhase = ''
       mkdir -p $out/bin/sdk/sbf/dependencies
       cp -r $src/* $out
-      # ln -s ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools $out/bin/sdk/sbf/dependencies/platform-tools      ln -s $out/bin/ld.lld $out/bin/ld
+      ln -s ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools $out/bin/sdk/sbf/dependencies/platform-tools 
 
       cp -rf ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools/rust/* $out
       chmod 0755 -R $out
