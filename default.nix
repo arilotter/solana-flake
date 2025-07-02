@@ -86,6 +86,17 @@ rec {
       mkdir -p $platformtools
       cp -r $src/llvm $platformtools;
       cp -r $src/rust $platformtools;
+
+      # Make files writable so we can remove broken symlinks
+      chmod -R u+w $platformtools
+
+      # Fix broken symlinks by removing them (they're not essential for Solana builds)
+      # The _lldb.cpython symlink points to a missing liblldb.so
+      rm -f $platformtools/llvm/lib/python3.10/dist-packages/lldb/_lldb.cpython-310-x86_64-linux-gnu.so
+
+      # The lldb-argdumper symlink points to a missing bin/lldb-argdumper
+      rm -f $platformtools/llvm/lib/python3.10/dist-packages/lldb/lldb-argdumper
+
       ls -la $platformtools;
       chmod 0755 -R $out;
       touch $platformtools-${version}.md
@@ -100,7 +111,6 @@ rec {
 
       cp -ar ${agave-src}/sdk/sbf/* $out/bin/sdk/sbf/
     '';
-    dontCheckBrokenSymlinks = true;
   };
   solana = stdenv.mkDerivation {
     name = "solana";
@@ -159,8 +169,7 @@ rec {
     installPhase = ''
       mkdir -p $out/bin/sdk/sbf/dependencies
       cp -r $src/* $out
-      ln -s ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools $out/bin/sdk/sbf/dependencies/platform-tools
-      ln -s $out/bin/ld.lld $out/bin/ld
+      # ln -s ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools $out/bin/sdk/sbf/dependencies/platform-tools      ln -s $out/bin/ld.lld $out/bin/ld
 
       cp -rf ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools/rust/* $out
       chmod 0755 -R $out
