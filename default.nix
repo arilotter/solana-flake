@@ -1,7 +1,8 @@
 {
   pkgs,
 }:
-with pkgs; rec {
+with pkgs;
+rec {
   platforms = import ./platforms.nix pkgs;
 
   agave-src = pkgs.fetchFromGitHub {
@@ -12,7 +13,8 @@ with pkgs; rec {
     sha256 = "sha256-3wvXHY527LOvQ8b4UfXoIKSgwDq7Sm/c2qqj2unlN6I=";
   };
 
-  solana-cargo-build-sbf = with pkgs;
+  solana-cargo-build-sbf =
+    with pkgs;
     rustPlatform.buildRustPackage {
       pname = "solana-cargo-build-sbf";
       version = platforms.sol-version;
@@ -59,19 +61,17 @@ with pkgs; rec {
     name = "solana-platform-tools";
     version = platforms.platform-tools.version;
     src = platforms.platform-tools.${system};
-    nativeBuildInputs = [autoPatchelfHook];
-    buildInputs =
-      [
-        # Auto patching
-        zlib
-        stdenv.cc.cc
-        openssl
-        libclang.lib
-        xz
-        python310
-        libedit
-      ]
-      ++ lib.optionals stdenv.isLinux [udev];
+    nativeBuildInputs = [ autoPatchelfHook ];
+    buildInputs = [
+      # Auto patching
+      zlib
+      stdenv.cc.cc
+      openssl
+      libclang.lib
+      xz
+      python310
+      libedit
+    ] ++ lib.optionals stdenv.isLinux [ udev ];
 
     preFixup = ''
       for file in $(find $out -type f -executable); do
@@ -86,6 +86,17 @@ with pkgs; rec {
       mkdir -p $platformtools
       cp -r $src/llvm $platformtools;
       cp -r $src/rust $platformtools;
+
+      # Make files writable so we can remove broken symlinks
+      chmod -R u+w $platformtools
+
+      # Fix broken symlinks by removing them (they're not essential for Solana builds)
+      # The _lldb.cpython symlink points to a missing liblldb.so
+      rm -f $platformtools/llvm/lib/python3.10/dist-packages/lldb/_lldb.cpython-310-x86_64-linux-gnu.so
+
+      # The lldb-argdumper symlink points to a missing bin/lldb-argdumper
+      rm -f $platformtools/llvm/lib/python3.10/dist-packages/lldb/lldb-argdumper
+
       ls -la $platformtools;
       chmod 0755 -R $out;
       touch $platformtools-${version}.md
@@ -105,7 +116,10 @@ with pkgs; rec {
     name = "solana";
     version = platforms.cli.version;
     src = platforms.cli.${system};
-    nativeBuildInputs = [autoPatchelfHook makeWrapper];
+    nativeBuildInputs = [
+      autoPatchelfHook
+      makeWrapper
+    ];
 
     buildInputs = with pkgs; [
       solana-platform-tools
@@ -121,7 +135,6 @@ with pkgs; rec {
       mkdir -p $out/bin/sdk/sbf/dependencies
       cp -r $src/* $out
       ln -s ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools $out/bin/sdk/sbf/dependencies/platform-tools
-      ln -s $out/bin/ld.lld $out/bin/ld
       cp -rf ${solana-cargo-build-sbf}/* $out
       chmod 0755 -R $out
 
@@ -137,7 +150,10 @@ with pkgs; rec {
     name = "solana-rust";
     version = platforms.cli.version;
     src = platforms.cli.${system};
-    nativeBuildInputs = [autoPatchelfHook makeWrapper];
+    nativeBuildInputs = [
+      autoPatchelfHook
+      makeWrapper
+    ];
 
     buildInputs = with pkgs; [
       solana-platform-tools
@@ -152,8 +168,7 @@ with pkgs; rec {
     installPhase = ''
       mkdir -p $out/bin/sdk/sbf/dependencies
       cp -r $src/* $out
-      ln -s ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools $out/bin/sdk/sbf/dependencies/platform-tools
-      ln -s $out/bin/ld.lld $out/bin/ld
+      ln -s ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools $out/bin/sdk/sbf/dependencies/platform-tools 
 
       cp -rf ${solana-platform-tools}/bin/sdk/sbf/dependencies/platform-tools/rust/* $out
       chmod 0755 -R $out
@@ -172,11 +187,11 @@ with pkgs; rec {
       fetchSubmodules = true;
     };
 
-    cargoHash = "sha256-x/xIs7hEGKOsnF3xf4Pac0QFbhQ5+/fD1/DXhfaVrSA=";
+    cargoHash = "sha256-popy49tMI0SFa0WA33+avB5JQ2jiIEmGRXtRkSjOtvs=";
 
-    nativeBuildInputs = [makeWrapper];
+    nativeBuildInputs = [ makeWrapper ];
 
-    cargoPatches = [./anchor-idl-build.diff];
+    cargoPatches = [ ./anchor-idl-build.diff ];
 
     checkFlags = [
       "--skip=tests::test_check_and_get_full_commit_when_full_commit"
