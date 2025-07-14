@@ -41,11 +41,10 @@ rec {
       ];
 
       buildInputs = [
-        udev
         clang
         libclang.lib
         libedit
-      ];
+      ] ++ lib.optionals stdenv.isLinux [ udev ];
 
       LIBCLANG_PATH = "${libclang.lib}/lib";
       NIX_CFLAGS_COMPILE = "-I${libclang.lib}/clang/11.1.0/include";
@@ -61,7 +60,7 @@ rec {
     name = "solana-platform-tools";
     version = platforms.platform-tools.version;
     src = platforms.platform-tools.${system};
-    nativeBuildInputs = [ autoPatchelfHook ];
+    nativeBuildInputs = lib.optionals stdenv.isLinux [ autoPatchelfHook ];
     buildInputs = [
       # Auto patching
       zlib
@@ -73,7 +72,7 @@ rec {
       libedit
     ] ++ lib.optionals stdenv.isLinux [ udev ];
 
-    preFixup = ''
+    preFixup = lib.optionalString stdenv.isLinux ''
       for file in $(find $out -type f -executable); do
         if patchelf --print-needed "$file" 2>/dev/null | grep -q "libedit.so.2"; then
           patchelf --replace-needed libedit.so.2 libedit.so.0.0.74 "$file"
@@ -82,6 +81,9 @@ rec {
     '';
 
     installPhase = ''
+      mkdir -p $out/bin/sdk/sbf
+      cp -ar ${agave-src}/sdk/sbf/* $out/bin/sdk/sbf/
+
       platformtools=$out/bin/sdk/sbf/dependencies/platform-tools
       mkdir -p $platformtools
       cp -r $src/llvm $platformtools;
@@ -92,10 +94,10 @@ rec {
 
       # Fix broken symlinks by removing them (they're not essential for Solana builds)
       # The _lldb.cpython symlink points to a missing liblldb.so
-      rm -f $platformtools/llvm/lib/python3.10/dist-packages/lldb/_lldb.cpython-310-x86_64-linux-gnu.so
+      rm -f $platformtools/llvm/lib/python*/*-packages/lldb/_lldb.cpython-310-x86_64-linux-gnu.so
 
       # The lldb-argdumper symlink points to a missing bin/lldb-argdumper
-      rm -f $platformtools/llvm/lib/python3.10/dist-packages/lldb/lldb-argdumper
+      rm -f $platformtools/llvm/lib/python*/*-packages/lldb/lldb-argdumper
 
       ls -la $platformtools;
       chmod 0755 -R $out;
@@ -108,28 +110,29 @@ rec {
       ln -s ${criterion}/lib $criterion/lib
       ln -s ${criterion}/share $criterion/share
       touch $criterion-v${criterion.version}.md
-
-      cp -ar ${agave-src}/sdk/sbf/* $out/bin/sdk/sbf/
     '';
   };
   solana = stdenv.mkDerivation {
     name = "solana";
     version = platforms.cli.version;
     src = platforms.cli.${system};
-    nativeBuildInputs = [
-      autoPatchelfHook
+    nativeBuildInputs = lib.optionals stdenv.isLinux [ autoPatchelfHook ] ++ [
       makeWrapper
     ];
 
-    buildInputs = with pkgs; [
-      solana-platform-tools
-      stdenv.cc.cc.lib
-      libgcc
-      ocl-icd
-      udev
-      sgx-sdk
-      zlib
-    ];
+    buildInputs =
+      with pkgs;
+      [
+        solana-platform-tools
+        stdenv.cc.cc.lib
+        libgcc
+        ocl-icd
+        zlib
+      ]
+      ++ lib.optionals stdenv.isLinux [
+        udev
+        sgx-sdk
+      ];
 
     installPhase = ''
       mkdir -p $out/bin/sdk/sbf/dependencies
@@ -150,20 +153,23 @@ rec {
     name = "solana-rust";
     version = platforms.cli.version;
     src = platforms.cli.${system};
-    nativeBuildInputs = [
-      autoPatchelfHook
+    nativeBuildInputs = lib.optionals stdenv.isLinux [ autoPatchelfHook ] ++ [
       makeWrapper
     ];
 
-    buildInputs = with pkgs; [
-      solana-platform-tools
-      stdenv.cc.cc.lib
-      libgcc
-      ocl-icd
-      udev
-      sgx-sdk
-      zlib
-    ];
+    buildInputs =
+      with pkgs;
+      [
+        solana-platform-tools
+        stdenv.cc.cc.lib
+        libgcc
+        ocl-icd
+        zlib
+      ]
+      ++ lib.optionals stdenv.isLinux [
+        udev
+        sgx-sdk
+      ];
 
     installPhase = ''
       mkdir -p $out/bin/sdk/sbf/dependencies
