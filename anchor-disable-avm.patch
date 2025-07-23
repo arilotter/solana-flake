@@ -1,0 +1,13 @@
+diff --git a/cli/src/lib.rs b/cli/src/lib.rs
+index 05e8434f..037dc3eb 100644
+--- a/cli/src/lib.rs
++++ b/cli/src/lib.rs
+@@ -671,7 +671,7 @@ fn override_toolchain(cfg_override: &ConfigOverride) -> Result<RestoreToolchainC
+         // Anchor version override should be handled last
+         if let Some(anchor_version) = &cfg.toolchain.anchor_version {
+             // Anchor binary name prefix(applies to binaries that are installed via `avm`)
+-            const ANCHOR_BINARY_PREFIX: &str = "anchor-";
++            const ANCHOR_BINARY_PREFIX: &str = "NIX_DISABLED_AVM_BINARIES";
+ 
+             // Get the current version from the executing binary name if possible because commit
+             // based toolchain overrides do not have version information.
