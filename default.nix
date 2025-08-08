@@ -72,6 +72,9 @@ rec {
       libedit
     ] ++ lib.optionals stdenv.isLinux [ udev ];
 
+    # to work around https://github.com/NixOS/nixpkgs/issues/218712
+    dontStrip = stdenv.isDarwin;
+
     preFixup = lib.optionalString stdenv.isLinux ''
       for file in $(find $out -type f -executable); do
         if patchelf --print-needed "$file" 2>/dev/null | grep -q "libedit.so.2"; then
